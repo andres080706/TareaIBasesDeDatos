@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Empleados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="./styles.css" rel="stylesheet" />
+</head>
+<body>
+  <main class="container">
+    <h1>Empleados</h1>
+
+    <section class="actions">
+      <button id="btn-ir-insertar">Insertar Empleado</button>
+      <button id="btn-volver" class="hidden">← Regresar</button>
+    </section>
+
+    <!-- Lista -->
+    <section id="vista-lista">
+      <table>
+        <thead>
+          <tr><th>Id</th><th>Nombre</th><th>Salario</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </section>
+
+    <!-- Formulario -->
+    <section id="vista-insertar" class="hidden">
+      <form id="form-insertar" onsubmit="return false;">
+        <label>Nombre
+          <input id="nombre" type="text" placeholder="Ana López" required />
+        </label>
+        <label>Salario
+          <input id="salario" type="number" step="0.01" min="0.01" placeholder="500000.00" required />
+        </label>
+        <div class="errors" id="errors"></div>
+        <div class="form-actions">
+          <button id="btn-insertar">Insertar</button>
+          <button id="btn-cancelar" type="button">Cancelar</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const elLista = document.getElementById("vista-lista");
+    const elInsertar = document.getElementById("vista-insertar");
+    const tbody = document.getElementById("tbody");
+    const btnIr = document.getElementById("btn-ir-insertar");
+    const btnVolver = document.getElementById("btn-volver");
+    const btnInsertar = document.getElementById("btn-insertar");
+    const btnCancelar = document.getElementById("btn-cancelar");
+    const inputNombre = document.getElementById("nombre");
+    const inputSalario = document.getElementById("salario");
+    const errors = document.getElementById("errors");
+
+    const REGEX_NOMBRE_SIMPLE = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\- ]+$/;
+
+    function mostrarLista() {
+      elLista.classList.remove("hidden");
+      elInsertar.classList.add("hidden");
+      btnVolver.classList.add("hidden");
+      btnIr.classList.remove("hidden");
+      cargar();
+    }
+
+    function mostrarInsertar() {
+      elLista.classList.add("hidden");
+      elInsertar.classList.remove("hidden");
+      btnVolver.classList.remove("hidden");
+      btnIr.classList.add("hidden");
+      errors.textContent = "";
+      document.getElementById("form-insertar").reset();
+      inputNombre.focus();
+    }
+
+    async function cargar() {
+      const r = await fetch("/api/empleados");
+      const j = await r.json();
+      tbody.innerHTML = "";
+      (j.data || []).forEach(e => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${e.id}</td><td>${e.nombre}</td><td>${Number(e.salario).toFixed(2)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function validarUI() {
+      const nombre = inputNombre.value.trim().replace(/\s+/g, " ");
+      const salario = inputSalario.value.trim();
+      let msgs = [];
+
+      if (nombre.length === 0) msgs.push("El nombre es obligatorio.");
+      if (!REGEX_NOMBRE_SIMPLE.test(nombre)) msgs.push("El nombre solo permite letras, espacios y guiones.");
+      const s = Number(salario);
+      if (!isFinite(s)) msgs.push("El salario debe ser numérico.");
+      else if (s <= 0) msgs.push("El salario debe ser positivo.");
+      errors.textContent = msgs.join(" ");
+      return msgs.length === 0;
+    }
+
+    async function insertar() {
+      if (!validarUI()) return;
+      const payload = {
+        nombre: inputNombre.value.trim().replace(/\s+/g, " "),
+        salario: Number(inputSalario.value.trim())
+      };
+      const r = await fetch("/api/empleados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (r.status === 201) {
+        alert("Inserción exitosa");
+        mostrarLista();
+      } else {
+        let msg = "Error al insertar.";
+        try { const j = await r.json(); msg = j.error?.message || j.detail?.message || msg; } catch(e) {}
+        alert(msg);
+      }
+    }
+
+    btnIr.onclick = mostrarInsertar;
+    btnVolver.onclick = mostrarLista;
+    btnCancelar.onclick = mostrarLista;
+    btnInsertar.onclick = insertar;
+
+    mostrarLista(); // inicio
+  </script>
+</body>
+</html>
