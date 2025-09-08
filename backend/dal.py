@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 
 CONN_STR = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=25.39.62.157,1433;"
+    "SERVER=25.39.62.157;"
     "DATABASE=DBEmpresa;"
     "UID=sa;"
     "PWD=contrabases1234;"
@@ -26,6 +26,7 @@ class SqlServerDAL:
         import pyodbc
         with pyodbc.connect(self.conn_str) as cn:
             cur = cn.cursor()
+    
             cur.execute("EXEC dbo.sp_InsertarEmpleado ?, ?", (nombre, salario))
             row = cur.fetchone()
             if not row:
