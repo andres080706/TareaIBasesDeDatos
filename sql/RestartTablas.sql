@@ -1,7 +1,6 @@
 USE DBEmpresa;
 GO
 
-
 DROP TABLE dbo.Empleado
 
 CREATE TABLE dbo.Empleado(
@@ -9,7 +8,6 @@ CREATE TABLE dbo.Empleado(
 	Nombre varchar(128),
 	Salario MONEY
 	);
-
 
 Insert INTO dbo.Empleado (Nombre, Salario)
 Values ('Lucia Morales',2112),
@@ -58,4 +56,3 @@ Values ('Lucia Morales',2112),
 ('Mariana Gomez', 3500),
 ('Luis Hernandez', 5000)
 SELECT * FROM dbo.Empleado
-
